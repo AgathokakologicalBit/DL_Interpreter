@@ -1,0 +1,8 @@
+E:\_VisualSolutions\DL_Interpreter\DL_console_interpreter\bin\Debug\DL_console_interpreter.exe.config
+E:\_VisualSolutions\DL_Interpreter\DL_console_interpreter\bin\Debug\DL_console_interpreter.exe
+E:\_VisualSolutions\DL_Interpreter\DL_console_interpreter\bin\Debug\DL_console_interpreter.pdb
+E:\_VisualSolutions\DL_Interpreter\DL_console_interpreter\bin\Debug\DL_Interpreter.dll
+E:\_VisualSolutions\DL_Interpreter\DL_console_interpreter\bin\Debug\DL_Interpreter.pdb
+E:\_VisualSolutions\DL_Interpreter\DL_console_interpreter\obj\Debug\DL_console_interpreter.csprojResolveAssemblyReference.cache
+E:\_VisualSolutions\DL_Interpreter\DL_console_interpreter\obj\Debug\DL_console_interpreter.exe
+E:\_VisualSolutions\DL_Interpreter\DL_console_interpreter\obj\Debug\DL_console_interpreter.pdb

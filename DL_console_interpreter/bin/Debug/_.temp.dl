@@ -1,0 +1,14 @@
+myArray = {
+  index: 1,
+  push: function(value) {
+    println(myArray.a);
+    myArray.a = value;
+    println(myArray.a);
+  }
+};
+
+
+myArray.ast = {};
+myArray.ast.a = 'test';
+println(myArray.ast.a);
+input();
