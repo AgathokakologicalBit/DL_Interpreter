@@ -20,7 +20,7 @@ namespace DL_IDE
         private void button_run_Click(object sender, EventArgs e)
         {
             File.WriteAllText("_.temp.dl", code_field.Text);
-            var console = Process.Start("interpreter.exe", "_.temp.dl");
+            var console = Process.Start("DL_console_interpreter.exe", "_.temp.dl");
             console.PriorityClass = ProcessPriorityClass.High;
         }
     }

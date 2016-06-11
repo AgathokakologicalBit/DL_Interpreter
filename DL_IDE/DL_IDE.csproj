@@ -79,6 +79,16 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\DL_console_interpreter\DL_console_interpreter.csproj">
+      <Project>{96091a48-0d02-40ae-9c74-0b944d524b85}</Project>
+      <Name>DL_console_interpreter</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\DL_Interpreter\DL_Interpreter.csproj">
+      <Project>{674712db-824a-4e73-aa44-fcc40c726f15}</Project>
+      <Name>DL_Interpreter</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

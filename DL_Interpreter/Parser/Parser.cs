@@ -166,7 +166,7 @@ namespace DL_Interpreter.Parser
             --index;
             if (Current().GetToken() != ";")
                 throw new ParsingError("Expected semicolon(;) at the end of expression",
-                    Current(), position, Current().GetIndex() - position);
+                    tokens[--index], position, Current().GetIndex() - position);
             ++index;
             return expression;
         }
@@ -220,14 +220,54 @@ namespace DL_Interpreter.Parser
 
         private static Node ParseUnit()
         {
+            Node unit = GetCurrentNode();
+
+            if (unit != null)
+            {
+                if (Current().GetToken() == "." || Current().GetToken() == "[")
+                {
+                    while (true)
+                    {
+                        if (Current().GetToken() == ".")
+                        {
+                            ++index;
+
+                            var right = GetTokenNode(Peek()) as Variable;
+                            if (right?.type != "variable")
+                                throw new ParsingError("Expected identifier after dot",
+                                    Current(), Current().GetIndex(), Current().GetLength());
+
+                            right.type = "string";
+                            unit = new Operation(GetOperator("."), unit, right);
+                        }
+                        else if (Current().GetToken() == "[")
+                        {
+                            ++index;
+                            unit = new Operation(GetOperator("."), unit, ParseMathExpression(ParseUnit()));
+                        }
+                        else if (Current().GetToken() == "(")
+                        {
+                            unit = ParseFunctionCall(unit);
+                        }
+                        else break;
+                    }
+                }
+
+                return unit;
+            }
+
+            return new TokenNode(Peek().GetToken());
+        }
+
+        private static Node GetCurrentNode()
+        {
             if (Current().GetTokenType() == TokenType.Token && Current().GetToken() == "(")
             {
                 ++index;
-                var exp = ParseMathExpression(ParseUnit());
+                var unit = ParseMathExpression(ParseUnit());
 
-                if (Current().GetToken() == "(")
-                    return ParseFunctionCall(exp);
-                return exp;
+                if (Current().GetToken() == "(") return ParseFunctionCall(unit);
+                return unit;
             }
 
             if (Current().GetTokenType() == TokenType.EOF)
@@ -243,10 +283,12 @@ namespace DL_Interpreter.Parser
                     return new Variable(Current().GetToken(), Interpreter.GetTypeOfPredefined(Peek().GetToken()));
 
                 if (tokens[index + 1].GetToken() == "(" && tokens[index + 1].GetTokenType() == TokenType.Token)
+                {
                     if (Current().GetToken() == "function")
                         return ParseFunctionCreation();
-                    else
-                        return ParseFunctionCall(new Variable(Peek().GetToken(), "variable"));
+
+                    return ParseFunctionCall(new Variable(Peek().GetToken(), "variable"));
+                }
 
                 return new Variable(Peek().GetToken(), "variable");
             }
@@ -260,7 +302,28 @@ namespace DL_Interpreter.Parser
             if (Current().GetToken() == "{")
                 return ParseObjectCreation();
 
-            return new TokenNode(Peek().GetToken());
+            return null;
+        }
+
+        public static Node GetTokenNode(Token token)
+        {
+            if (Current().GetTokenType() == TokenType.EOF)
+            {
+                var last = Current();
+                if (tokens.Count != 1) last = tokens[tokens.Count - 2];
+                throw new ParsingError("Unexpected end of file", last, last.GetIndex(), last.GetLength());
+            }
+
+            if (token.GetTokenType() == TokenType.Identifier)
+                return new Variable(token.GetToken(), "variable");
+
+            if (token.GetTokenType() == TokenType.Number)
+                return new Variable(token.GetToken(), "number");
+
+            if (token.GetTokenType() == TokenType.String)
+                return new Variable(token.GetToken(), "string");
+
+            return new TokenNode(token.GetToken());
         }
 
         private static Node ParseFunctionCall(Node expression)

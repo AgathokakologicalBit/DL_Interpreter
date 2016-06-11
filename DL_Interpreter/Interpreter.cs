@@ -380,12 +380,11 @@ namespace DL_Interpreter
                 }
                 else
                 {
-                    var right = varop.right as Parser.Variable;
-                    if (right?.type == "variable") right.type = "string";
+                    var right = CalculateTree(varop.right, vars) as Parser.Variable;
                     bool found = false;
                     
                     foreach (var key in left.fields)
-                        if (key.Key.IsEqualTo(right))
+                        if (key.Key.IsDeepEqualTo(right))
                         {
                             (key.Value as Parser.Variable)?.Set(value);
                             found = true;
@@ -408,11 +407,10 @@ namespace DL_Interpreter
                 var left = GetVariableByName(vars, varop.left);
                 if (left.type == "undefined") return left;
 
-                var right = varop.right as Parser.Variable;
-                if (right?.type == "variable") right.type = "string";
+                var right = CalculateTree(varop.right, vars);
 
                 foreach (var key in left.fields)
-                    if (key.Key.IsEqualTo(right))
+                    if (key.Key.IsDeepEqualTo(right))
                         return key.Value as Parser.Variable;
             }
 

@@ -25,7 +25,7 @@ namespace DL_Interpreter.Tokenizer
                 if( smb == '\n')
                 {
                     ++line;
-                    position = 0;
+                    position = 1;
                 }
 
                 switch (parsingMode)
@@ -85,8 +85,11 @@ namespace DL_Interpreter.Tokenizer
                             || (smb == '.' && hd))
                         {
                             parsingMode = 0;
-                            --now;
-                            --position;
+                            if (!char.IsWhiteSpace(code[now]))
+                            {
+                                --now;
+                                --position;
+                            }
                             continue;
                         }
                         if(smb == '.') hd = true;
@@ -97,8 +100,11 @@ namespace DL_Interpreter.Tokenizer
                         if(!char.IsLetterOrDigit(smb) && smb != '_')
                         {
                             parsingMode = 0;
-                            --now;
-                            --position;
+                            if (!char.IsWhiteSpace(code[now]))
+                            {
+                                --now;
+                                --position;
+                            }
                             continue;
                         }
                         current.Append(smb);
@@ -111,8 +117,11 @@ namespace DL_Interpreter.Tokenizer
                         else
                         {
                             parsingMode = 0;
-                            --now;
-                            --position;
+                            if (!char.IsWhiteSpace(code[now]))
+                            {
+                                --now;
+                                --position;
+                            }
                         }
                         break;
                 }
