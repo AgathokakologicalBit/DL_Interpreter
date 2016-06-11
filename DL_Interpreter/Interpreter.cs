@@ -183,15 +183,17 @@ namespace DL_Interpreter
             var opnode = tree as Operation;
             if(opnode != null)
             {
-                var op = opnode.op;
                 Parser.Variable left = null, right = null;
-                if (op.symbol != ".")
+                if (opnode.op.symbol != ".")
                 {
-                    left = CalculateTree(opnode.left, context);
+                    var lon = opnode.left as Operation;
+                    if (lon?.op.symbol != ".")
+                        left = CalculateTree(opnode.left, context);
+
                     right = CalculateTree(opnode.right, context);
                 }
 
-                switch(op.symbol)
+                switch(opnode.op.symbol)
                 {
                     case "+": return VariableOperations.sum(left, right);
                     case "-": return VariableOperations.sub(left, right);

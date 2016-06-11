@@ -105,14 +105,14 @@ namespace DL_Interpreter.Parser
             return this;
         }
 
-        internal bool IsEqualTo(Variable right) => right.ConvertTo(this.type).value == this.value || this.ConvertTo(right.type).value == right.value;
-        internal bool IsDeepEqualTo(Variable right) => right.value == this.value && right.type == this.type;
+        internal bool IsEqualTo(Variable right) => (right.ConvertTo(type).value == value || ConvertTo(right.type).value == right.value) && type != "object" && right.type != "object";
+        internal bool IsDeepEqualTo(Variable right) => right.value == value && right.type == type && type != "object" && right.type != "object";
 
         internal bool IsGreaterThan(Variable right) =>
-            Native.Parse(this.ConvertTo("number").value) > Native.Parse(right.ConvertTo("number").value);
+            Native.Parse(ConvertTo("number").value) > Native.Parse(right.ConvertTo("number").value);
         
         internal bool IsGreaterOrEqualTo(Variable right) =>
-            Native.Parse(this.ConvertTo("number").value) >= Native.Parse(right.ConvertTo("number").value);
+            Native.Parse(ConvertTo("number").value) >= Native.Parse(right.ConvertTo("number").value);
 
         internal void Set(Variable var)
         {

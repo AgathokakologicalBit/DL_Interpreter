@@ -12,11 +12,11 @@ namespace DL_console_interpreter
             string file;
             if (args.Length != 0) file = args[0];
             else file = Console.ReadLine();
-
+            
             if (File.Exists(file))
             {
                 var code = File.ReadAllText(file);
-
+                
                 Interpreter.Reset();
 
                 Interpreter.ShowError = ShowError;
