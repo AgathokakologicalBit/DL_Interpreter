@@ -1,5 +1,4 @@
 ﻿using DL_Interpreter.Tokenizer;
-using System;
 using System.Collections.Generic;
 
 namespace DL_Interpreter.Parser
@@ -93,6 +92,11 @@ namespace DL_Interpreter.Parser
             {
                 ++index;
                 return new ReturnNode(ParseExpression());
+            }
+            if (t == "break")
+            {
+                index += 2;
+                return new BreakNode();
             }
 
             return ParseExpression();

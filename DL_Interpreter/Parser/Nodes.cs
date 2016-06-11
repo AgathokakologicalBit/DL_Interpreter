@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace DL_Interpreter.Parser
 {
@@ -169,6 +168,15 @@ namespace DL_Interpreter.Parser
         public ReturnNode(Node expression)
         {
             this.expression = expression;
+            this.value = "return";
+        }
+    }
+
+    public class BreakNode : Node
+    {
+        public BreakNode()
+        {
+            this.value = "break";
         }
     }
 

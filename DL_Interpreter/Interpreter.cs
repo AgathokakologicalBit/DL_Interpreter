@@ -40,6 +40,7 @@ namespace DL_Interpreter
 
         public static int depth = 0;
         private static bool isReturn;
+        private static bool isBreak;
 
         static Interpreter()
         {
@@ -135,11 +136,20 @@ namespace DL_Interpreter
                     if (varnode.type == "functionCall")
                     {
                         Parser.Variable left = CalculateTree(varnode.expression, context);
-                        
+
+                        Parser.Variable caller;
+                        var objectOp = varnode.expression as Operation;
+
+                        if (objectOp == null || objectOp.op.symbol != ".") caller = new Parser.Variable();
+                        else caller = GetVariableByName(context, objectOp.left);
+
                         if (left.type == "function")
                             var = new Variable("anonymous", "function", left);
                         else
+                        {
                             ShowError(left.type + " is not a function");
+                            return new Parser.Variable();
+                        }
 
                         if (varnode.args != null)
                         {
@@ -156,7 +166,7 @@ namespace DL_Interpreter
                             }
                             
                             if (func.native) return func.function(args);
-                            else return ExecuteFunction(func, args);
+                            else return ExecuteFunction(func, args, caller);
                         }
 
                         return new Parser.Variable();
@@ -263,6 +273,11 @@ namespace DL_Interpreter
                     {
                         varnode = CalculateTree(conditionalNode.code, context);
                         if (isReturn) return varnode;
+                        if (isBreak)
+                        {
+                            isBreak = false;
+                            break;
+                        }
 
                         CalculateTree(conditionalNode.post, context);
                     }
@@ -274,6 +289,11 @@ namespace DL_Interpreter
                     {
                         varnode = CalculateTree(conditionalNode.code, context);
                         if (isReturn) return varnode;
+                        if (isBreak)
+                        {
+                            isBreak = false;
+                            break;
+                        }
                     }
                 }
 
@@ -287,20 +307,21 @@ namespace DL_Interpreter
                 {
                     varnode = CalculateTree(exp, context);
                     if (isReturn) return varnode;
+                    if (isBreak) break;
                 }
             }
-
-            var retNode = tree as ReturnNode;
-            if (retNode != null)
+            
+            if (tree.value == "return")
             {
                 isReturn = true;
-                return CalculateTree(retNode.expression, context);
+                return CalculateTree((tree as ReturnNode) .expression, context);
             }
+            if (tree.value == "break") isBreak = true;
 
             return new Parser.Variable();
         }
 
-        private static Parser.Variable ExecuteFunction(FunctionNode func, List<Parser.Variable> args)
+        private static Parser.Variable ExecuteFunction(FunctionNode func, List<Parser.Variable> args, Parser.Variable caller)
         {
             ++depth;
 
@@ -310,6 +331,7 @@ namespace DL_Interpreter
             for (int now = 0; now < func.parameters.Count; ++now)
                 if (args.Count >= now)
                     context.Add(new Variable(func.parameters[now], args[now].type, args[now]));
+            context.Add(new Variable("this", caller.type, caller));
 
             foreach (Node line in func.code.code)
             {
@@ -319,6 +341,11 @@ namespace DL_Interpreter
                     isReturn = false;
                     --depth;
                     return var;
+                }
+                if (isBreak)
+                {
+                    ShowError("break operator need to be placed in cycle");
+                    isBreak = false;
                 }
             }
 
