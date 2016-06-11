@@ -123,6 +123,16 @@ namespace DL_Interpreter.Parser
             type = var.type;
             value = var.value;
         }
+
+        public Variable Clone()
+        {
+            Variable clone = new Variable(value, type);
+            clone.prototype = prototype;
+            clone.args = args;
+            clone.expression = expression;
+            clone.fields = fields;
+            return clone;
+        }
     }
 
     public class FunctionNode : Variable

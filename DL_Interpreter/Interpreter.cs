@@ -314,7 +314,7 @@ namespace DL_Interpreter
             if (tree.value == "return")
             {
                 isReturn = true;
-                return CalculateTree((tree as ReturnNode) .expression, context);
+                return CalculateTree((tree as ReturnNode).expression, context);
             }
             if (tree.value == "break") isBreak = true;
 
@@ -381,7 +381,7 @@ namespace DL_Interpreter
             {
                 if (vars[now].name == name)
                 {
-                    vars[now].value = value;
+                    vars[now].value = value.Clone();
                     vars[now].value.type = type;
                     return;
                 }
@@ -394,7 +394,7 @@ namespace DL_Interpreter
         {
             var normal = variable as Parser.Variable;
 
-            if (normal != null) SetVariable(vars, variable.value, type, value);
+            if (normal != null) SetVariable(vars, variable.value, type, value.Clone());
             
             var varop = variable as Operation;
             if (varop != null)
@@ -407,17 +407,17 @@ namespace DL_Interpreter
                 }
                 else
                 {
-                    var right = CalculateTree(varop.right, vars) as Parser.Variable;
+                    var right = CalculateTree(varop.right, vars);
                     bool found = false;
                     
                     foreach (var key in left.fields)
                         if (key.Key.IsDeepEqualTo(right))
                         {
-                            (key.Value as Parser.Variable)?.Set(value);
+                            (key.Value as Parser.Variable)?.Set(value.Clone());
                             found = true;
                         }
 
-                    if (!found) left.fields.Add(right, value);
+                    if (!found) left.fields.Add(right.Clone(), value.Clone());
                 }
             }
         }
