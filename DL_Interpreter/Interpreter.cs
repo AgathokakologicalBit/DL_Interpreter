@@ -186,10 +186,8 @@ namespace DL_Interpreter
                 Parser.Variable left = null, right = null;
                 if (opnode.op.symbol != ".")
                 {
-                    var lon = opnode.left as Operation;
-                    if (lon?.op.symbol != ".")
+                    if (opnode.op.symbol != "=")
                         left = CalculateTree(opnode.left, context);
-
                     right = CalculateTree(opnode.right, context);
                 }
 
@@ -216,28 +214,24 @@ namespace DL_Interpreter
                         
                         return right;
                     case "+=":
-                        left = GetVariableByName(context, opnode.left);
                         var sum = VariableOperations.sum(left, right);
 
                         SetVariable(context, opnode.left, sum.type, sum);
 
                         return sum;
                     case "-=":
-                        left = GetVariableByName(context, opnode.left);
                         var sub = VariableOperations.sub(left, right);
 
                         SetVariable(context, opnode.left, sub.type, sub);
 
                         return sub;
                     case "*=":
-                        left = GetVariableByName(context, opnode.left);
                         var mult = VariableOperations.mul(left, right);
 
                         SetVariable(context, opnode.left, mult.type, mult);
                         
                         return mult;
                     case "/=":
-                        left = GetVariableByName(context, opnode.left);
                         var div = VariableOperations.div(left, right);
 
                         SetVariable(context, opnode.left, div.type, div);

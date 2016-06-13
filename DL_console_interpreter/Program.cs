@@ -16,11 +16,19 @@ namespace DL_console_interpreter
             if (File.Exists(file))
             {
                 var code = File.ReadAllText(file);
-                
-                Interpreter.Reset();
 
+                System.Threading.Thread.CurrentThread.Priority = System.Threading.ThreadPriority.Highest;
+                
                 Interpreter.ShowError = ShowError;
                 Interpreter.Write = Console.Write;
+
+                Interpreter.Execute(
+                    "a = { five: (function() => 5)() };\n" +
+                    "b='speeding up a.five = ' + a.five;\n" +
+                    "if(typeof(a) == 3) a.five = 3; else {}" +
+                    "for ( i = 0; i < a.five; i += 1 ) ;\na['five'];"
+                    );
+                Interpreter.Reset();
 
                 Interpreter.AddNativeFunction("input", new string[0], Input);
 

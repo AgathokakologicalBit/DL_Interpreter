@@ -126,10 +126,11 @@ namespace DL_Interpreter.Parser
 
         public Variable Clone()
         {
+            if (type == "function" || type == "object") return this;
+
             Variable clone = new Variable(value, type);
             clone.prototype = prototype;
             clone.args = args;
-            clone.expression = expression;
             clone.fields = fields;
             return clone;
         }
