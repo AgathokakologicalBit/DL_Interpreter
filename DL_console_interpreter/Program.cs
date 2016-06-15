@@ -30,10 +30,12 @@ namespace DL_console_interpreter
                     );
                 Interpreter.Reset();
 
-                Interpreter.AddNativeFunction("input", new string[0], Input);
-
-                Interpreter.AddNativeFunction("print", new[] { "object" }, Print);
-                Interpreter.AddNativeFunction("println", new[] { "object" }, Println);
+                Library.RegisterObject("Console")
+                    .AddFunction("ReadLine", Input, new string[0])
+                    .AddFunction("Read", InputChar, new string[0])
+                    .AddFunction("Write", Write, new[] { "object" })
+                    .AddFunction("WriteLine", WriteLine, new[] { "object" })
+                    .AddFunction("Clear", Clear, new string[0]);
                 
                 Interpreter.Execute(code);
             }
@@ -53,24 +55,30 @@ namespace DL_console_interpreter
             Console.ForegroundColor = ConsoleColor.White;
         }
 
-        public static DL_Interpreter.Parser.Variable Input(List<DL_Interpreter.Parser.Variable> args)
+        public static DL_Interpreter.Parser.Variable Clear(List<DL_Interpreter.Parser.Variable> args)
         {
-            return new DL_Interpreter.Parser.Variable(Console.ReadLine(), "string");
-        }
-
-        public static DL_Interpreter.Parser.Variable Write(List<DL_Interpreter.Parser.Variable> args)
-        {
-            Console.WriteLine(args[0].value);
+            Console.Clear();
             return new DL_Interpreter.Parser.Variable();
         }
 
-        public static DL_Interpreter.Parser.Variable Print(List<DL_Interpreter.Parser.Variable> args)
+        public static DL_Interpreter.Parser.Variable Input(List<DL_Interpreter.Parser.Variable> args) =>
+            new DL_Interpreter.Parser.Variable(Console.ReadLine(), "string");
+
+        public static DL_Interpreter.Parser.Variable InputChar(List<DL_Interpreter.Parser.Variable> args)
+        {
+            try { return new DL_Interpreter.Parser.Variable(Console.ReadKey().KeyChar.ToString(), "string"); }
+            catch(Exception ex) { ShowError(ex.Message); }
+
+            return new DL_Interpreter.Parser.Variable();
+        }
+
+        public static DL_Interpreter.Parser.Variable Write(List<DL_Interpreter.Parser.Variable> args)
         {
             Console.Write(args[0].value);
             return new DL_Interpreter.Parser.Variable();
         }
 
-        public static DL_Interpreter.Parser.Variable Println(List<DL_Interpreter.Parser.Variable> args)
+        public static DL_Interpreter.Parser.Variable WriteLine(List<DL_Interpreter.Parser.Variable> args)
         {
             Console.WriteLine(args[0].value);
             return new DL_Interpreter.Parser.Variable();

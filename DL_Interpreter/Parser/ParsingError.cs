@@ -9,6 +9,8 @@ namespace DL_Interpreter.Parser
 {
     class ParsingError : Exception
     {
+        public ParsingError(string message) : base(message) {}
+
         public ParsingError(string message, Token tk, int startPosition, int length)
             : base("Error occured at " + tk.GetLine() + ":" + tk.GetPosition() + " : " + message)
         {

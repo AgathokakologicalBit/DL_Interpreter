@@ -18,6 +18,7 @@ namespace DL_Interpreter.Parser
 
         public Dictionary<Variable, Node> fields = new Dictionary<Variable, Node>(10);
         public Variable prototype;
+        public bool constant = false;
 
         public Variable()
         {
@@ -133,6 +134,27 @@ namespace DL_Interpreter.Parser
             clone.args = args;
             clone.fields = fields;
             return clone;
+        }
+
+        public Variable AddVariable(string name, Variable value, bool constant = true)
+        {
+            value.constant = constant;
+            fields.Add(new Variable(name, "string"), value);
+            return this;
+        }
+
+        public Variable AddFunction(string name, FunctionNode.ExecuteFunction function, string[] parameters, bool constant = true)
+        {
+            var func = new FunctionNode(name, new List<string>(parameters), function);
+            func.constant = constant;
+            fields.Add(new Variable(name, "string"), func);
+            return this;
+        }
+
+        public Variable SetConstant(bool constant)
+        {
+            this.constant = constant;
+            return this;
         }
     }
 

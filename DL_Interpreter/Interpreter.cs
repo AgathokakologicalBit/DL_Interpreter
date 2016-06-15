@@ -33,7 +33,7 @@ namespace DL_Interpreter
             new Operator("==", 1),
             new Operator("!=", 1),
         };
-        public static List<Variable> variables = new List<Variable>(100);
+        public static List<Variable> variables;
 
         public static Action<string> Write;
         public static Action<string> ShowError;
@@ -42,9 +42,13 @@ namespace DL_Interpreter
         private static bool isReturn;
         private static bool isBreak;
 
+        private static Dictionary<string, Library> libraries;
+
         static Interpreter()
         {
+            libraries = new Dictionary<string, Library>(10);
             Reset();
+            RegisterLibrary("math", new Libs.Math());
         }
 
         // Delete all created variables and functions
@@ -60,12 +64,14 @@ namespace DL_Interpreter
             AddNativeFunction("string", new[] { "object" }, Native.convert_string);
             
             AddNativeFunction("executionTime", new string[0], Native.ExecutionTime);
+        }
 
-            AddNativeFunction("sin", new[] { "num" }, Native.Sin);
-            AddNativeFunction("cos", new[] { "num" }, Native.Cos);
-
-            AddNativeFunction("pow", new[] { "x", "y" }, Native.Pow);
-            AddNativeFunction("sqrt", new[] { "num" }, Native.Sqrt);
+        public static void RegisterLibrary(string name, Library lib) => libraries.Add(name, lib);
+        public static void UseLibrary(string name)
+        {
+            if (!libraries.ContainsKey(name))
+                throw new ParsingError("Library " + name + " doesn't exist");
+            libraries[name].Init();
         }
 
         public static string Execute(string code)
@@ -377,6 +383,12 @@ namespace DL_Interpreter
             {
                 if (vars[now].name == name)
                 {
+                    if (vars[now].value.constant)
+                    {
+                        ShowError("left isde of exppression is constant");
+                        return;
+                    }
+
                     vars[now].value = value.Clone();
                     vars[now].value.type = type;
                     return;
@@ -390,22 +402,38 @@ namespace DL_Interpreter
         {
             var normal = variable as Parser.Variable;
 
-            if (normal != null) SetVariable(vars, variable.value, type, value.Clone());
+            if (normal != null)
+            {
+                SetVariable(vars, variable.value, type, value.Clone());
+                return;
+            }
             
             var varop = variable as Operation;
             if (varop != null)
             {
                 var left = GetVariableByName(vars, varop.left);
+                if (left.constant)
+                {
+                    ShowError("left isde of exppression is constant");
+                    return;
+                }
 
                 if (left.type == "undefined")
                 {
-                    ShowError("Cannod read property of undefined");
+                    ShowError("Can not read property of undefined");
                 }
                 else
                 {
                     var right = CalculateTree(varop.right, vars);
                     bool found = false;
                     
+                    if (right.value == "prototype")
+                    {
+                        if (value.type == "object") left.prototype = value;
+                        else ShowError($"Prototype need to be object, but {value.type} were given");
+                        return;
+                    }
+
                     foreach (var key in left.fields)
                         if (key.Key.IsDeepEqualTo(right))
                         {
@@ -421,21 +449,47 @@ namespace DL_Interpreter
         public static Parser.Variable GetVariableByName(List<Variable> vars, Node variable, bool global = false)
         {
             var normal = variable as Parser.Variable;
-            
-            if (normal != null) return GetVariableByName(vars, normal.value).value;
+
+            if (normal != null)
+            {
+                if (normal.type == "variable") return GetVariableByName(vars, normal.value).value;
+                return normal;
+            }
             
             var varop = variable as Operation;
             if (varop != null)
             {
                 var left = GetVariableByName(vars, varop.left);
-                if (left.type == "undefined") return left;
+                if (left.type == "undefined")
+                {
+                    ShowError("Can not read property of undefined");
+                    return left;
+                }
 
                 var right = CalculateTree(varop.right, vars);
+                if (left.type != "object" && right.type == "number")
+                    return new Parser.Variable(left.value[(int)Native.Parse(right.value)].ToString(), "string");
+                
+                if (right.value == "prototype")
+                    return left.prototype ?? new Parser.Variable();
 
                 foreach (var key in left.fields)
                     if (key.Key.IsDeepEqualTo(right))
-                        return key.Value as Parser.Variable;
+                        return key.Value as Parser.Variable ?? new Parser.Variable();
+
+                if (left.prototype != null) return GetVariableByName(left.prototype, right);
             }
+
+            return new Parser.Variable();
+        }
+
+        public static Parser.Variable GetVariableByName(Parser.Variable prototype, Parser.Variable right)
+        {
+            foreach (var field in prototype.fields)
+                if (field.Key.IsDeepEqualTo(right))
+                    return field.Value as Parser.Variable ?? new Parser.Variable();
+
+            if (prototype.prototype != null) return GetVariableByName(prototype.prototype, right);
 
             return new Parser.Variable();
         }

@@ -42,6 +42,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Interpreter.cs" />
+    <Compile Include="Library.cs" />
+    <Compile Include="Libs\Math.cs" />
     <Compile Include="Native.cs" />
     <Compile Include="Parser\Node.cs" />
     <Compile Include="Parser\Nodes.cs" />

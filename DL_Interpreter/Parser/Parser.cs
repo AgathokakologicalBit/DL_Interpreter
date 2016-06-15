@@ -14,8 +14,12 @@ namespace DL_Interpreter.Parser
             var block = new Block();
             index = 0;
 
+            Node tree;
             while (index < tokens.Count - 1)
-                block.Append(OptimizeExpression(ParseLine()));
+            {
+                tree = ParseLine();
+                if (tree != null) block.Append(OptimizeExpression(tree));
+            }
 
             return block;
         }
@@ -97,6 +101,25 @@ namespace DL_Interpreter.Parser
             {
                 index += 2;
                 return new BreakNode();
+            }
+            if (t == "require")
+            {
+                ++index;
+                var name = "";
+                while (Current().GetToken() != ";")
+                {
+                    name += Peek().GetToken();
+                    if (Current().GetToken() == ";") break;
+                    if (Current().GetToken() != ".")
+                        throw new ParsingError("Unexpected symbol " + Current().GetToken(),
+                            Current(), Current().GetIndex(), Current().GetLength());
+                    ++index;
+                    name += ".";
+                }
+                ++index;
+                Interpreter.UseLibrary(name);
+
+                return null;
             }
 
             return ParseExpression();
