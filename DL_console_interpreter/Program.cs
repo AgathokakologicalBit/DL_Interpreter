@@ -35,6 +35,7 @@ namespace DL_console_interpreter
                     .AddFunction("Read", InputChar, new string[0])
                     .AddFunction("Write", Write, new[] { "object" })
                     .AddFunction("WriteLine", WriteLine, new[] { "object" })
+                    .AddFunction("Log", Log, new[] { "object" })
                     .AddFunction("Clear", Clear, new string[0]);
                 
                 Interpreter.Execute(code);
@@ -82,6 +83,49 @@ namespace DL_console_interpreter
         {
             Console.WriteLine(args[0].value);
             return new DL_Interpreter.Parser.Variable();
+        }
+
+        public static DL_Interpreter.Parser.Variable Log(List<DL_Interpreter.Parser.Variable> args)
+        {
+            Log(args[0], 0);
+            Console.WriteLine();
+            return new DL_Interpreter.Parser.Variable();
+        }
+
+        public static void Log(DL_Interpreter.Parser.Variable var, int depth, bool inner = false)
+        {
+            if (!inner) for (int i = 0; i < depth; ++i) Console.Write("  ");
+
+            switch(var.type)
+            {
+                case "string":
+                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    Console.Write($"\"{var.value}\"");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    break;
+                case "number":
+                    Console.ForegroundColor = ConsoleColor.DarkCyan;
+                    Console.Write(var.value);
+                    Console.ForegroundColor = ConsoleColor.White;
+                    break;
+                case "boolean":
+                    Console.ForegroundColor = ConsoleColor.DarkGreen;
+                    Console.Write(var.value);
+                    Console.ForegroundColor = ConsoleColor.White;
+                    break;
+                case "object":
+                    Console.WriteLine("{");
+                    foreach (var field in var.fields)
+                    {
+                        Log(field.Key, depth + 1);
+                        Console.Write(": ");
+                        Log(field.Value as DL_Interpreter.Parser.Variable, depth + 1, true);
+                        Console.WriteLine();
+                    }
+                    for (int i = 0; i < depth; ++i) Console.Write("  ");
+                    Console.Write("}");
+                    break;
+            }
         }
     }
 }

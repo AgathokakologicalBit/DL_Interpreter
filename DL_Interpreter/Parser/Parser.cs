@@ -190,10 +190,12 @@ namespace DL_Interpreter.Parser
 
             var position = Current().GetIndex();
             Node expression = ParseMathExpression(ParseUnit());
+
             --index;
             if (Current().GetToken() != ";")
                 throw new ParsingError("Expected semicolon(;) at the end of expression",
-                    tokens[--index], position, Current().GetIndex() - position);
+                    Current(), position, Current().GetIndex() - position);
+
             ++index;
             return expression;
         }

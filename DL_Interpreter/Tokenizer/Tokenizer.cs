@@ -110,10 +110,10 @@ namespace DL_Interpreter.Tokenizer
                         current.Append(smb);
                         break;
                     case 4:
-                        if(current.GetToken() != ")" && (smb == '=' ||
-                            ((smb == '+' || smb == '-')
-                              && smb.ToString() == current.GetToken())))
+                        if (Interpreter.IsOperator(current.GetToken() + smb))
+                        {
                             current.Append(smb);
+                        }
                         else
                         {
                             parsingMode = 0;

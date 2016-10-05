@@ -16,22 +16,27 @@ namespace DL_Interpreter
             new Operator("*=", 10, true),
             new Operator("/=", 10, true),
 
-            new Operator("*", 4),
-            new Operator("/", 4),
-            new Operator("%", 4),
+            new Operator("*", 7),
+            new Operator("/", 7),
+            new Operator("%", 7),
 
-            new Operator("+", 3),
-            new Operator("-", 3),
+            new Operator("+", 6),
+            new Operator("-", 6),
 
-            new Operator(">",  2),
-            new Operator(">=", 2),
-            new Operator("<",  2),
-            new Operator("<=", 2),
+            new Operator(">",  4),
+            new Operator(">=", 4),
+            new Operator("<",  4),
+            new Operator("<=", 4),
 
-            new Operator("===", 1),
-            new Operator("!==", 1),
-            new Operator("==", 1),
-            new Operator("!=", 1),
+            new Operator("===", 3),
+            new Operator("!==", 3),
+            new Operator("==", 3),
+            new Operator("!=", 3),
+
+            new Operator("&", 2),
+            new Operator("|", 2),
+            new Operator("&&", 2),
+            new Operator("||", 2)
         };
         public static List<Variable> variables;
 
@@ -205,7 +210,15 @@ namespace DL_Interpreter
                     case "/": return VariableOperations.div(left, right);
                     case "%": return VariableOperations.res(left, right);
 
-                    case ".": return GetVariableByName(context, opnode);
+                    case ".":
+                        var lnode = opnode.left as Parser.Variable;
+                        if (lnode != null && lnode.type != "function" && lnode.type != "functionCall")
+                            return GetVariableByName(context, opnode);
+                        else
+                        {
+                            opnode = new Parser.Operation(operators[0], CalculateTree(opnode.left, context), opnode.right);
+                            return GetVariableByName(context, opnode);
+                        }
 
                     case "=":
                         if (right.fields.Count != 0)
@@ -244,15 +257,22 @@ namespace DL_Interpreter
 
                         return div;
 
-                    case "==": return new Parser.Variable(left.IsEqualTo(right) ? "true" : "false" , "boolean");
-                    case "!=": return new Parser.Variable(left.IsEqualTo(right) ? "false" : "true" , "boolean");
-                    case "===": return new Parser.Variable(left.IsDeepEqualTo(right) ? "true" : "false" , "boolean");
-                    case "!==": return new Parser.Variable(left.IsDeepEqualTo(right) ? "false" : "true" , "boolean");
+                    case "==": return new Parser.Variable(left.IsEqualTo(right));
+                    case "!=": return new Parser.Variable(!left.IsEqualTo(right));
+                    case "===": return new Parser.Variable(left.IsDeepEqualTo(right));
+                    case "!==": return new Parser.Variable(!left.IsDeepEqualTo(right));
 
-                    case ">": return new Parser.Variable(left.IsGreaterThan(right) ? "true" : "false" , "boolean");
-                    case ">=": return new Parser.Variable(left.IsGreaterOrEqualTo(right) ? "true" : "false" , "boolean");
-                    case "<": return new Parser.Variable(right.IsGreaterThan(left) ? "true" : "false" , "boolean");
-                    case "<=": return new Parser.Variable(right.IsGreaterOrEqualTo(left) ? "true" : "false" , "boolean");
+                    case ">": return new Parser.Variable(left.IsGreaterThan(right));
+                    case ">=": return new Parser.Variable(left.IsGreaterOrEqualTo(right));
+                    case "<": return new Parser.Variable(right.IsGreaterThan(left));
+                    case "<=": return new Parser.Variable(right.IsGreaterOrEqualTo(left));
+
+                    case "&":
+                    case "&&":
+                        return new Parser.Variable(left.IsEqualTo(new Parser.Variable(true)) && right.IsEqualTo(new Parser.Variable(true)));
+                    case "|":
+                    case "||":
+                        return left.IsEqualTo(new Parser.Variable(true)) ? left : right;
                 }
             }
 
@@ -313,12 +333,12 @@ namespace DL_Interpreter
                 }
             }
             
-            if (tree.value == "return")
+            if (tree?.value == "return")
             {
                 isReturn = true;
                 return CalculateTree((tree as ReturnNode).expression, context);
             }
-            if (tree.value == "break") isBreak = true;
+            if (tree?.value == "break") isBreak = true;
 
             return new Parser.Variable();
         }
@@ -450,16 +470,24 @@ namespace DL_Interpreter
         {
             var normal = variable as Parser.Variable;
 
+            // If given node is variable name - return it's value
             if (normal != null)
             {
                 if (normal.type == "variable") return GetVariableByName(vars, normal.value).value;
                 return normal;
             }
             
-            var varop = variable as Operation;
+            // If given node is Operation - return 
+            var varop = variable as Parser.Operation;
             if (varop != null)
             {
-                var left = GetVariableByName(vars, varop.left);
+                Parser.Variable left;
+
+                if (!(varop.left is Parser.Variable) || varop.value == null)
+                    left = CalculateTree(varop.left, vars);
+                else
+                    left = GetVariableByName(vars, varop.left);
+
                 if (left.type == "undefined")
                 {
                     ShowError("Can not read property of undefined");
@@ -467,15 +495,42 @@ namespace DL_Interpreter
                 }
 
                 var right = CalculateTree(varop.right, vars);
+                switch (right.value)
+                {
+                    case "length":
+                        if (left.type == "undefined")
+                            return new Parser.Variable(0);
+                        else if (left.type == "object")
+                            return new Parser.Variable(left.fields?.Keys.Count ?? 0);
+                        else if (left.type == "boolean")
+                            return new Parser.Variable(left.value == "true" ? 1 : 0);
+                        else if (left.type == "function")
+                            return Parser.Variable.UNDEFINED;
+                        
+                        return new Parser.Variable(left.value?.Length ?? 0);
+
+                    case "prototype":
+                        return left.prototype ?? Parser.Variable.UNDEFINED;
+                }
+
                 if (left.type != "object" && right.type == "number")
-                    return new Parser.Variable(left.value[(int)Native.Parse(right.value)].ToString(), "string");
-                
-                if (right.value == "prototype")
-                    return left.prototype ?? new Parser.Variable();
+                {
+                    int index = (int) Native.Parse(right.value);
+
+                    // If index < 0 - inverse it
+                    if (index < 0) index = left.value.Length + index;
+
+                    // If index is not in lengths range - return undefined
+                    if (index < 0) return Parser.Variable.UNDEFINED;
+                    if (index >= left.value.Length) return Parser.Variable.UNDEFINED;
+
+                    // Return i-th element(char, digit, etc) of variable
+                    return new Parser.Variable(left.value[index].ToString(), "string");
+                }
 
                 foreach (var key in left.fields)
                     if (key.Key.IsDeepEqualTo(right))
-                        return key.Value as Parser.Variable ?? new Parser.Variable();
+                        return key.Value as Parser.Variable ?? Parser.Variable.UNDEFINED;
 
                 if (left.prototype != null) return GetVariableByName(left.prototype, right);
             }
@@ -503,6 +558,14 @@ namespace DL_Interpreter
             if ( depth != 0 && !global ) return GetVariableByName(variables, name, true);
 
             return new Variable("", "undefined", new Parser.Variable());
+        }
+
+        public static bool IsOperator(string token)
+        {
+            foreach(var op in operators)
+                if (op.symbol == token)
+                    return true;
+            return false;
         }
     }
 }

@@ -11,6 +11,10 @@ namespace DL_Interpreter.Parser
 
     public class Variable : Node
     {
+        public static Variable UNDEFINED = new Variable();
+        public static Variable BOOLEAN = new Variable(false);
+        public static Variable STRING = new Variable("", "string");
+
         public string type;
 
         public Node expression;
